@@ -15,10 +15,10 @@ export default function Home() {
     setMessage("Procesando...");
 
     try {
-      const res = await fetch("/api/request", {
+      const res = await fetch("/api/requestSepolia", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet }),
+        body: JSON.stringify({ address: wallet }),
       });
       const data = await res.json();
       setMessage(data.message);
