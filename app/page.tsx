@@ -31,13 +31,22 @@ export default function Home() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-blue-950 text-white p-6 gap-6">
+      {/* Logo */}
+      <img
+        src="/seph.png"
+        alt="Sepolia logo"
+        className="w-32 mb-6 opacity-90 drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
+      />
+
       {/* Title */}
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
           Sepolia Faucet
         </h1>
         <p className="text-gray-400 text-sm">
-          Recibe <span className="text-blue-400 font-semibold">0.01 Sepolia</span> cada 24 horas
+          Recibe{" "}
+          <span className="text-blue-400 font-semibold">0.01 Sepolia</span>{" "}
+          cada 24 horas
         </p>
       </div>
 
