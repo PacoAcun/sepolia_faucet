@@ -5,14 +5,20 @@ export default function Home() {
   const [wallet, setWallet] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<"idle" | "processing" | "success" | "cooldown" | "error">("idle");
+  const [txHash, setTxHash] = useState<string | null>(null);
 
   const requestTokens = async () => {
     if (!wallet) {
-      setMessage("Ingresa una dirección válida");
+      setStatus("error");
+      setTxHash(null);
+      setMessage("Ingresa una dirección válida (0x...)");
       return;
     }
     setLoading(true);
-    setMessage("Procesando...");
+    setStatus("processing");
+    setTxHash(null);
+    setMessage("⏳ Procesando tu solicitud...");
 
     try {
       const res = await fetch("/api/requestSepolia", {
@@ -21,9 +27,23 @@ export default function Home() {
         body: JSON.stringify({ address: wallet }),
       });
       const data = await res.json();
-      setMessage(data.message);
+      if (!res.ok) {
+        if (typeof data?.timeRemaining === "number") {
+          const hours = Math.ceil(data.timeRemaining / (60 * 60 * 1000));
+          setStatus("cooldown");
+          setMessage(`Debes esperar ${hours} hora(s) para volver a pedir`);
+        } else {
+          setStatus("error");
+          setMessage(data?.error || "Ocurrió un error al procesar tu solicitud");
+        }
+      } else {
+        setStatus("success");
+        setTxHash(typeof data?.txHash === "string" ? data.txHash : null);
+        setMessage(data?.message || "Solicitud enviada");
+      }
     } catch {
-      setMessage("Error de conexión con el faucet");
+      setStatus("error");
+      setMessage("⚠️ Error de conexión con el faucet");
     } finally {
       setLoading(false);
     }
@@ -72,19 +92,31 @@ export default function Home() {
         {loading ? "Enviando..." : "Solicitar 0.01 Sepolia"}
       </button>
 
-      {/* Message */}
       {message && (
-        <p
-          className={`text-sm text-center mt-2 ${
-            message.includes("✅")
-              ? "text-green-400"
-              : message.includes("⏳")
-              ? "text-yellow-400"
-              : "text-red-400"
-          }`}
+        <div
+          className={
+            `w-80 mt-3 rounded-lg border p-3 text-sm text-center transition-colors ` +
+            (status === "success"
+              ? "border-emerald-600/40 bg-emerald-900/20 text-emerald-300"
+              : status === "cooldown"
+              ? "border-yellow-600/40 bg-yellow-900/20 text-yellow-300"
+              : status === "processing"
+              ? "border-blue-600/40 bg-blue-900/20 text-blue-300"
+              : "border-red-600/40 bg-red-900/20 text-red-300")
+          }
         >
-          {message}
-        </p>
+          <div className="mb-2">{message}</div>
+          {status === "success" && txHash && (
+            <a
+              href={`https://sepolia.etherscan.io/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block w-full text-center rounded-md px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 shadow-lg shadow-blue-500/20 text-white font-medium"
+            >
+              Ver en Etherscan
+            </a>
+          )}
+        </div>
       )}
     </main>
   );
